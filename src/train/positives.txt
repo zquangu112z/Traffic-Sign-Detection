@@ -1,5 +1,0 @@
-./positive_images/p5.jpg
-./positive_images/p2.jpg
-./positive_images/p4.jpg
-./positive_images/p3.jpg
-./positive_images/p1.jpg

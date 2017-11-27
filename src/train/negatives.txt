@@ -1,4 +1,0 @@
-./negative_images/n2.jpg
-./negative_images/n5.jpg
-./negative_images/n3.jpg
-./negative_images/n1.jpg

@@ -1,0 +1,6 @@
+*.pyc
+*.pkl
+*.ckpt
+__pycache__
+data
+images
