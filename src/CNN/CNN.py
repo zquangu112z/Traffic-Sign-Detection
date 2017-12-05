@@ -7,25 +7,29 @@ import sys
 import tempfile
 import pickle
 from sklearn.utils import shuffle
+import cv2
+import numpy as np
 # from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf
 
 TRAIN_DATA_DIR = "data/raw/training"
-TEST_DATA_DIR = "data/raw/test"
+TEST_DATA_DIR = "data/raw/testing"
 CNN_MODEL_DIR = "model/CNN/cnn.ckpt"
 PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
 PICKLE_LABELS_DIR = "data/pickle/test_labels.pkl"
+NUM_CLASSES = 2 
 
 from utils import load_data
 
 def deepnn(x):
+
   """
   Args:
     x: an input tensor with the dimensions (N_examples, 784)
   Returns:
-    A tuple (y, keep_prob). y is a tensor of shape (N_examples, 5), with values
-    equal to the logits of classifying the image into one of 5 classes (the classID 0-4). keep_prob is a scalar placeholder for the probability of
+    A tuple (y, keep_prob). y is a tensor of shape (N_examples, NUM_CLASSES), with values
+    equal to the logits of classifying the image into one of NUM_CLASSES classes (the classID 0 -> NUM_CLASSES-1). keep_prob is a scalar placeholder for the probability of
     dropout.
   """
   # Reshape to use within a convolutional neural net.
@@ -69,10 +73,10 @@ def deepnn(x):
     keep_prob = tf.placeholder(tf.float32)
     h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
-  # Map the 1024 features to 62 classes, one for each digit
+  # Map the 1024 features to NUM_CLASSES classes, one for each digit
   with tf.name_scope('fc2'):
-    W_fc2 = weight_variable([1024, 5])
-    b_fc2 = bias_variable([5])
+    W_fc2 = weight_variable([1024, NUM_CLASSES])
+    b_fc2 = bias_variable([NUM_CLASSES])
 
     y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
   return y_conv, keep_prob
@@ -125,7 +129,7 @@ def main(_):
   x = tf.placeholder(tf.float32, [None, 784])
 
   # Define loss and optimizer
-  y_ = tf.placeholder(tf.float32, [None, 5])
+  y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
 
   # Build the graph for the deep net
   y_conv, keep_prob = deepnn(x)
@@ -168,16 +172,43 @@ def main(_):
     #save model
     saver.save(sess, CNN_MODEL_DIR)
 
-    #evaluation
-    images, labels = load_data(TRAIN_DATA_DIR)
+    
+def evaluate():
+  x = tf.placeholder(tf.float32, [None, 784])
+  y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
+  y_conv, keep_prob = deepnn(x)
+  with tf.name_scope('accuracy'):
+    correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+    correct_prediction = tf.cast(correct_prediction, tf.float32)
+  accuracy = tf.reduce_mean(correct_prediction)
+
+  with tf.Session() as sess:
+    saver = tf.train.Saver()
+    saver.restore(sess, CNN_MODEL_DIR)
+    images, labels = load_data(TEST_DATA_DIR)
     print('test accuracy %g' % accuracy.eval(feed_dict={
         x: images, y_: labels, keep_prob: 1.0}))
 
+def predict(img):
+  x = tf.placeholder(tf.float32, [None, 784])
+  y_conv, keep_prob = deepnn(x)
+  predict = tf.argmax(y_conv, 1)
+
+  with tf.Session() as sess:
+    saver = tf.train.Saver()
+    saver.restore(sess, CNN_MODEL_DIR)
+    print('Label %g' % sess.run(predict, feed_dict={x: img, keep_prob: 1.0}))
+
 if __name__ == '__main__':
-  # parser = argparse.ArgumentParser()
-  # parser.add_argument('--data_dir', type=str,
-  #                     default='/tmp/tensorflow/mnist/input_data',
-  #                     help='Directory for storing input data')
-  # FLAGS, unparsed = parser.parse_known_args()
-  # tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
-  tf.app.run(main=main, argv=[sys.argv[0]])
+  # Train
+  # tf.app.run(main=main, argv=[sys.argv[0]])
+  
+  # Evaluation
+  evaluate()
+
+  # Predict
+  # img = cv2.imread('data/00011_00000.ppm', 0)
+  # img = cv2.resize(img, (28,28))
+  # predict([np.reshape(img, -1)])
+
+  

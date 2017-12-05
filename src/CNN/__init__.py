@@ -1,0 +1,1 @@
+from .CNN_3channels import deepnn
