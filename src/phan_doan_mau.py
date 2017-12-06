@@ -5,9 +5,9 @@ from src.CNN import deepnn
 
 
 CNN_MODEL_DIR = "model/CNN/3cnn.ckpt"
-
+IMG_SIZE = 56
 def detect(path):
-	x_placeholder = tf.placeholder(tf.float32, [None, 28,28,3])
+	x_placeholder = tf.placeholder(tf.float32, [None, IMG_SIZE,IMG_SIZE,3])
 	y_conv, keep_prob = deepnn(x_placeholder)
 	predict = tf.argmax(y_conv, 1)
 	y_sm = tf.nn.softmax(y_conv)
@@ -42,7 +42,7 @@ def detect(path):
 
 				# Erode to reduce noise and dilate to focus
 				mask = cv2.erode(mask, None, iterations = 1)
-				mask = cv2.dilate(mask, None, iterations = 3)
+				mask = cv2.dilate(mask, None, iterations = 5)
 
 				# Find contours in the mask
 				# cnts = cv2.findContours(image = mask.copy(), mode = cv2.RETR_EXTERNAL, method = cv2.CHAIN_APPROX_SIMPLE)[-2]
@@ -52,27 +52,27 @@ def detect(path):
 				if len(cnts) > 0:
 					# Draw all contours and fill the contour interiors -> mask
 					cv2.drawContours(image = mask, contours = cnts, contourIdx = -1, color = 255, thickness = -1)
-					mask = cv2.dilate(mask, None, iterations = 7)
-					mask = cv2.erode(mask, None, iterations = 1)
+					mask = cv2.dilate(mask, None, iterations = 5)
+					mask = cv2.erode(mask, None, iterations = 2)
 
 				# Draw a rectangle outside each contour
 				cnts = cv2.findContours(image = mask.copy(), mode = cv2.RETR_EXTERNAL, method = cv2.CHAIN_APPROX_SIMPLE)[-2]
 				for cnt in cnts:
 					x, y, w, h = cv2.boundingRect(cnt)
-					if w > 27 and h > 27 and float(h)/w > 0.9 and float(h)/w < 1.2:
+					if w > 20 and h > 20 and float(h)/w > 0.8 and float(h)/w < 1.5:
 					# if True:
 						#TODO: check if it is a sign
 						isSign = False
 						# window = cv2.resize(frame[x:x+w, y:y+h], (28,28)) #TODO bug: imgwarp.cpp:3229: error: (-215) ssize.area() > 0 in function resize
 						
-						# resize -> 28*28
+						# resize -> IMG_SIZE*IMG_SIZE
 						x_center, y_center = x + int(w/2), y + int(h/2)
 						try:
 							_max = max(w,h)
-							window = cv2.resize(frame[x_center-int(_max/2):x_center+int(_max/2), y_center-int(_max/2):y_center+int(_max/2)], (28,28))
+							window = cv2.resize(frame[x_center-int(_max/2):x_center+int(_max/2), y_center-int(_max/2):y_center+int(_max/2)], (IMG_SIZE,IMG_SIZE))
 						except:
 							_min = min(w,h)
-							window = cv2.resize(frame[x_center-int(_min/2):x_center+int(_min/2), y_center-int(_min/2):y_center+int(_min/2)], (28,28))
+							window = cv2.resize(frame[x_center-int(_min/2):x_center+int(_min/2), y_center-int(_min/2):y_center+int(_min/2)], (IMG_SIZE,IMG_SIZE))
 
 						window = cv2.cvtColor(window, cv2.COLOR_HSV2RGB) #hsv2rgb
 						_y_conv, lable = sess.run([y_sm, predict], feed_dict={x_placeholder: [window], keep_prob: 1.0})
@@ -96,7 +96,7 @@ def detect(path):
 		cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-	# detect("data/MVI_1049.avi")
+	detect("data/MVI_1049.avi")
 	# detect("data/MVI_1082.avi")
-	detect("data/test_sign.avi")
+	# detect("data/test_sign.avi")
 	# detect("data/test_sign2.avi")

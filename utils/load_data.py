@@ -40,6 +40,7 @@ def to_one_hot(d):
 # print(to_one_hot(61))
 # print(to_one_hot(0))
 
+IMG_SIZE = 56
 
 def load_data(data_dir):
     """Loads a data set and returns two lists:
@@ -63,6 +64,6 @@ def load_data(data_dir):
         for f in file_names:
             # images.append(skimage.transform.resize(skimage.data.imread(f), (28, 28)))
             # images.append(np.reshape(cv2.resize(cv2.imread(f, 0), (28, 28)), -1)) #TODO upgrade to use all 3 chanels
-            images.append(cv2.resize(cv2.imread(f), (28, 28)))
+            images.append(cv2.resize(cv2.imread(f), (IMG_SIZE, IMG_SIZE)))
             labels.append(to_one_hot(int(d)))
     return images, labels

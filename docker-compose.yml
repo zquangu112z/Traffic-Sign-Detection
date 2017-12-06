@@ -1,0 +1,11 @@
+version: "3"
+services:
+    3cnn:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        image: pymachine3cc
+        volumes:
+            # - .:/app
+            # - ~/Fiisoft/practice-tensorflow/output2:/app/output
+            - ~/output:/app/model
