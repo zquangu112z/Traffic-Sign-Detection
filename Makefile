@@ -2,7 +2,7 @@ cnn:
 	PYTHONPATH="/home/zquangu112z/Fiisoft/practice-opencv" python src/CNN/CNN.py
 
 3cnn:
-	PYTHONPATH="/home/zquangu112z/Fiisoft/practice-opencv" python src/CNN/CNN_3channels_evaluation.py
+	PYTHONPATH="/home/zquangu112z/Fiisoft/practice-opencv" python src/CNN/CNN_3channels_3conv_eval.py
 
 sliding:
 	PYTHONPATH="/home/zquangu112z/Fiisoft/practice-opencv" python src/object_detection.py
