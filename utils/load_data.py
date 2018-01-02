@@ -1,9 +1,10 @@
 import os
-import skimage.data
-import skimage.transform
+# import skimage.data
+# import skimage.transform
 import numpy as np
 import cv2
 import pickle
+# from utils import jittering
 
 
 def to_one_hot(d):
@@ -70,6 +71,27 @@ def load_data(data_dir):
             # skimage.data.imread(f), (28, 28)))
             # images.append(np.reshape(cv2.resize(cv2.imread(f, 0), (28, 28)),
             # -1)) #TODO upgrade to use all 3 chanels
-            images.append(cv2.resize(cv2.imread(f), (IMG_SIZE, IMG_SIZE)))
-            labels.append(to_one_hot(int(d)))
+            try:
+                img = cv2.resize(cv2.imread(f), (IMG_SIZE, IMG_SIZE))
+                images.append(img)
+                labels.append(to_one_hot(int(d)))
+            except:
+                pass
+
+            # transformed_img = translatingImg(img, -10, 10)
+            # images.append(transformed_img)
+            # labels.append(to_one_hot(int(d)))
+
+            # transformed_img = rescalingImg(img, 2)
+            # images.append(transformed_img)
+            # labels.append(to_one_hot(int(d)))
+
+            # transformed_img = shearingImg(img, 100, 0)
+            # images.append(transformed_img)
+            # labels.append(to_one_hot(int(d)))
+
+            # transformed_img = stretchingImg(img, 0.5)
+            # images.append(transformed_img)
+            # labels.append(to_one_hot(int(d)))
+
     return images, labels

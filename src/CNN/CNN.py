@@ -9,6 +9,7 @@ import pickle
 from sklearn.utils import shuffle
 import cv2
 import numpy as np
+from utils import load_data
 # from tensorflow.examples.tutorials.mnist import input_data
 
 import tensorflow as tf

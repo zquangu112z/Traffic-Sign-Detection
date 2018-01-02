@@ -14,7 +14,8 @@ import tensorflow as tf
 
 TRAIN_DATA_DIR = "data/raw/training"
 TEST_DATA_DIR = "data/raw/testing"
-CNN_MODEL_DIR = "model/CNN/3cnn_evaluation_30epoch.ckpt"  # 3conv, 20epch, eval  # 0.98721
+# CNN_MODEL_DIR = "model/CNN/3cnn_test.ckpt" # 3 lop conv, 10 epoch
+CNN_MODEL_DIR = "model/CNN/3cnn_4conv_30ep_DEC14_2017.ckpt"  # 0.9688
 PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
 PICKLE_LABELS_DIR = "data/pickle/test_labels.pkl"
 NUM_CLASSES = 2
@@ -66,9 +67,15 @@ def deepnn(x):
         b_conv3 = bias_variable([64])
         h_conv3 = tf.nn.relu(conv2d(h_pool2, W_conv3) + b_conv3)
 
-    # Second pooling layer.
+    # Forth convolutional layer -- maps 64 feature maps to 64.
+    with tf.name_scope('conv4'):
+        W_conv4 = weight_variable([5, 5, 64, 64])
+        b_conv4 = bias_variable([64])
+        h_conv4 = tf.nn.relu(conv2d(h_conv3, W_conv4) + b_conv4)
+
+    # Third pooling layer.
     with tf.name_scope('pool3'):
-        h_pool3 = max_pool_2x2(h_conv3)
+        h_pool3 = max_pool_2x2(h_conv4)
 
     # Fully connected layer 1 -- after 2 round of downsampling, our 28x28 image
     # is down to 7x7x64 feature maps -- maps this to 1024 features.
@@ -142,7 +149,7 @@ def main(_):
 
     num_datapoint = len(images)
     batch_size = 100
-    num_epochs = 10
+    num_epochs = 30
 
     # Create the model
     x = tf.placeholder(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3])

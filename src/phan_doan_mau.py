@@ -4,7 +4,9 @@ import tensorflow as tf
 from src.CNN import deepnn
 
 
-CNN_MODEL_DIR = "model/CNN/3cnn_evaluation_20epoch.ckpt"
+CNN_MODEL_DIR = "model/CNN/3cnn_evaluation_30epoch.ckpt"
+# CNN_MODEL_DIR = "model/CNN/3cnn.ckpt"
+# CNN_MODEL_DIR = "model/CNN/3cnn_4conv_30ep_DEC14_2017.ckpt"
 IMG_SIZE = 56
 
 
@@ -44,7 +46,7 @@ def detect(path):
 
                 # Erode to reduce noise and dilate to focus
                 mask = cv2.erode(mask, None, iterations=1)
-                mask = cv2.dilate(mask, None, iterations=7)
+                mask = cv2.dilate(mask, None, iterations=3)
 
                 # Find contours in the mask
                 # cnts = cv2.findContours(image = mask.copy(),
@@ -58,13 +60,14 @@ def detect(path):
                     # Draw all contours and fill the contour interiors -> mask
                     cv2.drawContours(image=mask, contours=cnts, contourIdx=-1,
                                      color=255, thickness=-1)
-                    mask = cv2.dilate(mask, None, iterations=7)
+                    mask = cv2.dilate(mask, None, iterations=3)
                     mask = cv2.erode(mask, None, iterations=3)
 
                 # Draw a rectangle outside each contour
                 cnts = cv2.findContours(image=mask.copy(),
                                         mode=cv2.RETR_EXTERNAL,
                                         method=cv2.CHAIN_APPROX_SIMPLE)[-2]
+                i = 0
                 for cnt in cnts:
                     x, y, w, h = cv2.boundingRect(cnt)
                     if w > 20 and h > 20 and float(h)/w > 0.8 and float(h)/w < 1.5:
@@ -79,7 +82,11 @@ def detect(path):
                         x_center, y_center = x + int(w/2), y + int(h/2)
                         try:
                             _max = max(w, h)
-                            window = frame[x_center-int(_max/2):x_center+int(_max/2), y_center-int(_max/2):y_center+int(_max/2)]
+                            # window = frame[y_center-int(_max/2):y_center+int(_max/2), x_center-int(_max/2):x_center+int(_max/2)]
+                            window = frame[y:y+h, x:x+w]
+                            i += 1
+                            cv2.imshow("window %d" % i, window)
+
                             # print(_max)
                             # print(window.shape)
                             window = cv2.resize(window, (IMG_SIZE, IMG_SIZE))
@@ -100,12 +107,12 @@ def detect(path):
 
                             # if True:
                             if isSign:
-                                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 1)
+                                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, i*50), 1)
                         except Exception as e:
                             print(e)
 
-                cv2.imshow("frame", frame)
-                cv2.imshow("mask", mask)
+                        cv2.imshow("frame", frame)
+                    # cv2.imshow("mask", mask)
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
             else:
@@ -114,7 +121,7 @@ def detect(path):
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    # detect("data/MVI_1049.avi")
+    detect("data/MVI_1049.avi")
     # detect("data/MVI_1082.avi")
-    detect("data/test_sign.avi")
+    # detect("data/test_sign.avi")
     # detect("data/test_sign2.avi")

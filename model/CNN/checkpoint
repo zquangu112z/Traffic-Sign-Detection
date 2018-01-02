@@ -1,2 +1,2 @@
-model_checkpoint_path: "3cnn.ckpt"
-all_model_checkpoint_paths: "3cnn.ckpt"
+model_checkpoint_path: "3cnn_evaluation_20epoch.ckpt"
+all_model_checkpoint_paths: "3cnn_evaluation_20epoch.ckpt"
