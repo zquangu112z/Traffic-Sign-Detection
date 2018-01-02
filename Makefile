@@ -12,3 +12,6 @@ sign_detection:
 
 phan_doan_mau:
 	PYTHONPATH="/home/zquangu112z/Fiisoft/practice-opencv" python src/phan_doan_mau.py
+
+generate_images:
+	PYTHONPATH="/home/zquangu112z/Fiisoft/practice-opencv" python src/utils/crop_image.py
