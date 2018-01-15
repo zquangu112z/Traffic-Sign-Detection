@@ -15,3 +15,6 @@ phan_doan_mau:
 
 generate_images:
 	PYTHONPATH="/home/zquangu112z/Fiisoft/practice-opencv" python src/utils/crop_image.py
+
+pickle_dataset:
+	PYTHONPATH=./src python src/utils/pickle_dataset.py
