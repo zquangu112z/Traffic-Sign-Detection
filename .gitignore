@@ -3,5 +3,5 @@
 *.ckpt
 __pycache__
 data
-images
-model
+model/CNN
+clear

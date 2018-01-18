@@ -31,16 +31,32 @@ def to_one_hot(d):
 
     # sign: 0,...,50
     # not -sign: 99
-    ret = np.zeros(2)
-    if d < 51:
-        ret[0] = 1
-    else:
-        ret[1] = 1
+    # if d < 51:
+    #     ret[0] = 1
+    # else:
+    #     ret[1] = 1
+    # return ret
+
+    map = {
+        0: 0,
+        14: 1,
+        17: 2,
+        32: 3,
+        33: 4,
+        34: 5,
+        51: 6,
+        52: 7,
+        99: 8
+    }
+
+    ret = np.zeros(len(map))
+    ret[map[d]] = 1
     return ret
 
 
 # print(to_one_hot(61))
 # print(to_one_hot(0))
+
 
 IMG_SIZE = 56
 

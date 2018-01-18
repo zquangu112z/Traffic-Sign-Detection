@@ -2,41 +2,23 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import argparse
 import sys
 import tempfile
 import pickle
 from sklearn.utils import shuffle
-import cv2
-import numpy as np
-# from tensorflow.examples.tutorials.mnist import input_data
-from utils import load_data
+from src.utils import load_data
 import tensorflow as tf
 
 TRAIN_DATA_DIR = "data/raw/training"
 TEST_DATA_DIR = "data/raw/testing"
-CNN_MODEL_DIR = "model/CNN/3cnn_test.ckpt" # 3 lop conv, 10 epoch
+CNN_MODEL_DIR = "model/CNN/3cnn_3conv.ckpt"
 PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
 PICKLE_LABELS_DIR = "data/pickle/test_labels.pkl"
-NUM_CLASSES = 2
+NUM_CLASSES = 9
 IMG_SIZE = 56
 
 
 def deepnn(x):
-    '''
-    Args:
-      x: an input tensor with the dimensions (N_examples, 784)
-    Returns:
-      A tuple (y, keep_prob). y is a tensor of shape (N_examples, NUM_CLASSES),
-      with values equal to the logits of classifying the image into one of
-      NUM_CLASSES classes (the classID 0 -> NUM_CLASSES-1). keep_prob is a
-      scalar placeholder for the probability of
-      dropout.
-    '''
-    # Reshape to use within a convolutional neural net.
-    # Last dimension is for "features" - there is only one here,
-    # since images are
-    # grayscale -- it would be 3 for an RGB image, 4 for RGBA, etc.
     with tf.name_scope('reshape'):
         x_image = x
         # x_image = tf.placeholder([-1, 28, 28, 3])
@@ -77,7 +59,7 @@ def deepnn(x):
         W_fc1 = weight_variable([7 * 7 * 64, 1024])
         b_fc1 = bias_variable([1024])
 
-        h_pool3_flat = tf.reshape(h_pool3, [-1, 7*7*64])
+        h_pool3_flat = tf.reshape(h_pool3, [-1, 7 * 7 * 64])
         h_fc1 = tf.nn.relu(tf.matmul(h_pool3_flat, W_fc1) + b_fc1)
 
     # Dropout - controls the complexity of the model, prevents co-adaptation of
@@ -127,6 +109,8 @@ def main(_):
         with open(PICKLE_LABELS_DIR, 'rb') as f:
             labels = pickle.load(f)
     except:
+        pass
+        # TODO: un-comment these below line
         images, labels = load_data(TRAIN_DATA_DIR)
         with open(PICKLE_IMGS_DIR, 'wb') as f:
             pickle.dump(images, f)
@@ -134,9 +118,10 @@ def main(_):
             pickle.dump(labels, f)
 
     # evaluation set
+    num_validation = 2000
     images, labels = shuffle(images, labels, random_state=0)
-    images_eval = images[:3000]
-    labels_eval = labels[:3000]
+    images_eval, labels_eval = images[:num_validation], labels[:num_validation]
+    images, labels = images[num_validation:], labels[num_validation:]
 
     num_datapoint = len(images)
     batch_size = 100
@@ -170,17 +155,22 @@ def main(_):
     train_writer.add_graph(tf.get_default_graph())
 
     saver = tf.train.Saver()
-    with tf.Session() as sess:
+    count = 0
+    count_max = 5
+    last_accuracy = 0
+
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.8
+    # config.allow_soft_placement = True
+    # config.log_device_placement = True
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
         # epoch
         for i in range(num_epochs):
             images, labels = shuffle(images, labels, random_state=0)
 
-            count = 0
-            count_max = 50
-            last_accuracy = 0
-
-            for batch_idx in range(int(num_datapoint/batch_size)):
+            for batch_idx in range(int(num_datapoint / batch_size)):
                 start_idx = batch_idx * batch_size
                 end_idx = start_idx + batch_size
                 # batch = mnist.train.next_batch(50)
@@ -195,8 +185,25 @@ def main(_):
                                           y_: labels[start_idx:end_idx],
                                           keep_prob: 0.8})
 
+            # Evaluation
+            count = count + 1
+            accuracy_ = accuracy.eval(feed_dict={
+                x: images_eval,
+                y_: labels_eval,
+                keep_prob: 1.0})
+            if accuracy_ > last_accuracy:
+                # lan train cho ra ket qua tot hon lan truoc
+                count = 0
+                last_accuracy = accuracy_
+                # luu lai model tot nhat hien tai
+                saver.save(sess, CNN_MODEL_DIR)
+                print('Saved snapshot at epoch: %d' % i)
+            elif count == count_max:
+                print("Cannot improve the model. Finish training at epoch %d..." % i)
+                return
+
         # save model
-        saver.save(sess, CNN_MODEL_DIR)
+        # saver.save(sess, CNN_MODEL_DIR)
 
 
 def evaluate():
@@ -226,6 +233,7 @@ def predict(img):
         saver.restore(sess, CNN_MODEL_DIR)
         print('Label %g' % sess.run(
             predict, feed_dict={x: img, keep_prob: 1.0}))
+
 
 if __name__ == '__main__':
     # Train
