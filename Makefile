@@ -7,9 +7,10 @@ cnn:
 3cnn_3conv:
 	PYTHONPATH=./ python src/CNN/CNN_3channels_3conv.py
 
-test:
-	make 3cnn_4conv
+train:
 	make 3cnn_3conv
+	make 3cnn_4conv
+	
 
 
 3cnn_2conv:

@@ -9,7 +9,7 @@ from sklearn.utils import shuffle
 from src.utils import load_data
 import tensorflow as tf
 
-TRAIN_DATA_DIR = "data/raw/training"
+TRAIN_DATA_DIR = "data/raw/training/augmented/"
 TEST_DATA_DIR = "data/raw/testing"
 CNN_MODEL_DIR = "model/CNN/3cnn_3conv.ckpt"
 PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
@@ -125,7 +125,7 @@ def main(_):
 
     num_datapoint = len(images)
     batch_size = 100
-    num_epochs = 10
+    num_epochs = 30
 
     # Create the model
     x = tf.placeholder(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3])
@@ -160,7 +160,7 @@ def main(_):
     last_accuracy = 0
 
     config = tf.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = 0.8
+    config.gpu_options.per_process_gpu_memory_fraction = 0.5
     # config.allow_soft_placement = True
     # config.log_device_placement = True
     config.gpu_options.allow_growth = True
@@ -237,10 +237,10 @@ def predict(img):
 
 if __name__ == '__main__':
     # Train
-    tf.app.run(main=main, argv=[sys.argv[0]])
+    # tf.app.run(main=main, argv=[sys.argv[0]])      
 
     # Evaluation
-    # evaluate()
+    evaluate()
 
     # Predict
     # img = cv2.imread('data/00011_00000.ppm')

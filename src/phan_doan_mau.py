@@ -1,10 +1,9 @@
 import cv2
-import numpy as np
 import tensorflow as tf
 from src.CNN import deepnn
+import logging
 
-
-CNN_MODEL_DIR = "model/CNN/3cnn_evaluation_30epoch.ckpt"
+CNN_MODEL_DIR = "model/CNN/3cnn_3conv.ckpt"
 # CNN_MODEL_DIR = "model/CNN/3cnn.ckpt"
 # CNN_MODEL_DIR = "model/CNN/3cnn_4conv_30ep_DEC14_2017.ckpt"
 IMG_SIZE = 56
@@ -99,8 +98,11 @@ def detect(path):
 
                             window = cv2.cvtColor(window, cv2.COLOR_HSV2RGB)  # hsv2rgb
                             _y_conv, lable = sess.run([y_sm, predict], feed_dict={x_placeholder: [window], keep_prob: 1.0})
-                            if lable == 0:
+                            logging.warning(lable)
+                            if lable is 8:
                                 isSign = True
+                            else:
+                                isSign = False
 
                             # if _y_conv[0][0] == 1:
                             # 	isSign = True
@@ -122,6 +124,5 @@ def detect(path):
 
 if __name__ == "__main__":
     detect("data/MVI_1049.avi")
-    # detect("data/MVI_1082.avi")
     # detect("data/test_sign.avi")
     # detect("data/test_sign2.avi")

@@ -9,7 +9,7 @@ from sklearn.utils import shuffle
 from src.utils import load_data
 import tensorflow as tf
 
-TRAIN_DATA_DIR = "data/raw/training"
+TRAIN_DATA_DIR = "data/raw/training/augmented/"
 TEST_DATA_DIR = "data/raw/testing"
 CNN_MODEL_DIR = "model/CNN/3cnn_4conv.ckpt"
 PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
@@ -207,12 +207,29 @@ def main(_):
         # saver.save(sess, CNN_MODEL_DIR)
 
 
+def evaluate():
+    x = tf.placeholder(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3])
+    y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
+    y_conv, keep_prob = deepnn(x)
+    with tf.name_scope('accuracy'):
+        correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+        correct_prediction = tf.cast(correct_prediction, tf.float32)
+    accuracy = tf.reduce_mean(correct_prediction)
+
+    with tf.Session() as sess:
+        saver = tf.train.Saver()
+        saver.restore(sess, CNN_MODEL_DIR)
+        images, labels = load_data(TEST_DATA_DIR)
+        print('test accuracy %g' % accuracy.eval(feed_dict={
+            x: images, y_: labels, keep_prob: 1.0}))
+
+
 if __name__ == '__main__':
     # Train
-    tf.app.run(main=main, argv=[sys.argv[0]])
+    # tf.app.run(main=main, argv=[sys.argv[0]])
 
     # Evaluation
-    # evaluate()
+    evaluate()
 
     # Predict
     # img = cv2.imread('data/00011_00000.ppm')
