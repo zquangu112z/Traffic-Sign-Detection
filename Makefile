@@ -1,20 +1,20 @@
 cnn:
 	PYTHONPATH=./ python src/CNN/CNN.py
 
-3cnn_4conv:
+2conv:
+	PYTHONPATH=./ python src/CNN/CNN_3channels_2conv.py
+
+4conv:
 	PYTHONPATH=./ python src/CNN/CNN_3channels_4conv.py
 
-3cnn_3conv:
+3conv:
 	PYTHONPATH=./ python src/CNN/CNN_3channels_3conv.py
 
 train:
-	make 3cnn_3conv
-	make 3cnn_4conv
+	make 2conv
+	make 3conv
+	make 4conv
 	
-
-
-3cnn_2conv:
-	PYTHONPATH=./ python src/CNN/CNN_3channels_2conv.py
 
 sliding:
 	PYTHONPATH=./ python src/object_detection.py

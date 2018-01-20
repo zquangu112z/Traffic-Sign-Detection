@@ -10,7 +10,7 @@ from src.utils import load_data
 import tensorflow as tf
 
 
-TRAIN_DATA_DIR = "data/raw/training"
+TRAIN_DATA_DIR = "data/raw/training/augmented/"
 TEST_DATA_DIR = "data/raw/testing"
 CNN_MODEL_DIR = "model/CNN/3cnn_2conv.ckpt"
 PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
@@ -44,13 +44,13 @@ def deepnn(x):
     with tf.name_scope('pool2'):
         h_pool2 = max_pool_2x2(h_conv2)
 
-    # Fully connected layer 1 -- after 2 round of downsampling, our 28x28 image
-    # is down to 7x7x64 feature maps -- maps this to 1024 features.
+    # Fully connected layer 1 -- after 2 round of downsampling, our 56x56 image
+    # is down to 14x14x64 feature maps -- maps this to 1024 features.
     with tf.name_scope('fc1'):
-        W_fc1 = weight_variable([7 * 7 * 64, 1024])
+        W_fc1 = weight_variable([14 * 14 * 64, 1024])
         b_fc1 = bias_variable([1024])
 
-        h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
+        h_pool2_flat = tf.reshape(h_pool2, [-1, 14 * 14 * 64])
         h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
     # Dropout - controls the complexity of the model, prevents co-adaptation of
@@ -107,14 +107,14 @@ def main(_):
             pickle.dump(labels, f)
 
     # evaluation set
-    num_validation = 2000
+    num_validation = 10000
     images, labels = shuffle(images, labels, random_state=0)
     images_eval, labels_eval = images[:num_validation], labels[:num_validation]
     images, labels = images[num_validation:], labels[num_validation:]
 
     num_datapoint = len(images)
     batch_size = 100
-    num_epochs = 10
+    num_epochs = 20
 
     # Create the model
     x = tf.placeholder(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3])
@@ -149,10 +149,12 @@ def main(_):
     last_accuracy = 0
 
     config = tf.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = 0.8
+    # config = tf.ConfigProto(intra_op_parallelism_threads=3,
+    #                         inter_op_parallelism_threads=3)
+    # config.gpu_options.per_process_gpu_memory_fraction = 0.5
     # config.allow_soft_placement = True
     # config.log_device_placement = True
-    config.gpu_options.allow_growth = True
+    # config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
         sess.run(tf.global_variables_initializer())
         # epoch
@@ -163,16 +165,16 @@ def main(_):
                 start_idx = batch_idx * batch_size
                 end_idx = start_idx + batch_size
                 # batch = mnist.train.next_batch(50)
-                if batch_idx % 100 == 0:
+                if batch_idx % 5 == 0:
                     train_accuracy = accuracy.eval(feed_dict={
-                        x: images[start_idx:end_idx],
-                        y_: labels[start_idx:end_idx],
+                        x: images_eval,
+                        y_: labels_eval,
                         keep_prob: 1.0})
                     print('Epoch %d, batch_idx %d, training accuracy %g' %
                           (i, batch_idx, train_accuracy))
                 train_step.run(feed_dict={x: images[start_idx:end_idx],
                                           y_: labels[start_idx:end_idx],
-                                          keep_prob: 0.8})
+                                          keep_prob: 0.7})
 
             # Evaluation
             count = count + 1
@@ -188,7 +190,8 @@ def main(_):
                 saver.save(sess, CNN_MODEL_DIR)
                 print('Saved snapshot at epoch: %d' % i)
             elif count == count_max:
-                print("Cannot improve the model. Finish training at epoch %d..." % i)
+                print("Cannot improve the model. \
+                    Finish training at epoch %d..." % i)
                 return
 
         # save model

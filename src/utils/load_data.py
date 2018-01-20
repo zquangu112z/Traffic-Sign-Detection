@@ -1,10 +1,6 @@
 import os
-# import skimage.data
-# import skimage.transform
 import numpy as np
 import cv2
-import pickle
-# from utils import jittering
 
 
 def to_one_hot(d):
@@ -62,13 +58,6 @@ IMG_SIZE = 56
 
 
 def load_data(data_dir):
-    """Loads a data set and returns two lists:
-
-    images: a list of Numpy 1-D arrays with dimesion 784,
-            each representing an image in size 28x28.
-    labels: a list of one-hot vector that represent the images labels.
-    """
-    # Get all subdirectories of data_dir. Each represents a label.
     directories = [d for d in os.listdir(data_dir)
                    if os.path.isdir(os.path.join(data_dir, d))]
     # Loop through the label directories and collect the data in
@@ -79,7 +68,8 @@ def load_data(data_dir):
         label_dir = os.path.join(data_dir, d)
         file_names = [os.path.join(label_dir, f)
                       for f in os.listdir(label_dir) if f.endswith(".ppm") or
-                      f.endswith(".jpg") or f.endswith(".png")]
+                      f.endswith(".jpg") or f.endswith(".png") or
+                      f.endswith(".JPEG")]
         # For each label, load it's images and add them to the images list.
         # And add the label number (i.e. directory name) to the labels list.
         for f in file_names:
@@ -91,23 +81,7 @@ def load_data(data_dir):
                 img = cv2.resize(cv2.imread(f), (IMG_SIZE, IMG_SIZE))
                 images.append(img)
                 labels.append(to_one_hot(int(d)))
-            except:
+            except Exception:
                 pass
-
-            # transformed_img = translatingImg(img, -10, 10)
-            # images.append(transformed_img)
-            # labels.append(to_one_hot(int(d)))
-
-            # transformed_img = rescalingImg(img, 2)
-            # images.append(transformed_img)
-            # labels.append(to_one_hot(int(d)))
-
-            # transformed_img = shearingImg(img, 100, 0)
-            # images.append(transformed_img)
-            # labels.append(to_one_hot(int(d)))
-
-            # transformed_img = stretchingImg(img, 0.5)
-            # images.append(transformed_img)
-            # labels.append(to_one_hot(int(d)))
 
     return images, labels

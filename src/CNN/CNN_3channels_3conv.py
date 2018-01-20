@@ -10,7 +10,8 @@ from src.utils import load_data
 import tensorflow as tf
 
 TRAIN_DATA_DIR = "data/raw/training/augmented/"
-TEST_DATA_DIR = "data/raw/testing"
+# TEST_DATA_DIR = "data/raw/testing"
+TEST_DATA_DIR = "data/raw/training/augmented/00099/"
 CNN_MODEL_DIR = "model/CNN/3cnn_3conv.ckpt"
 PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
 PICKLE_LABELS_DIR = "data/pickle/test_labels.pkl"
@@ -108,7 +109,7 @@ def main(_):
             images = pickle.load(f)
         with open(PICKLE_LABELS_DIR, 'rb') as f:
             labels = pickle.load(f)
-    except:
+    except Exception:
         pass
         # TODO: un-comment these below line
         images, labels = load_data(TRAIN_DATA_DIR)
@@ -176,8 +177,8 @@ def main(_):
                 # batch = mnist.train.next_batch(50)
                 if batch_idx % 100 == 0:
                     train_accuracy = accuracy.eval(feed_dict={
-                        x: images[start_idx:end_idx],
-                        y_: labels[start_idx:end_idx],
+                        x: images_eval,
+                        y_: labels_eval,
                         keep_prob: 1.0})
                     print('Epoch %d, batch_idx %d, training accuracy %g' %
                           (i, batch_idx, train_accuracy))
@@ -199,7 +200,8 @@ def main(_):
                 saver.save(sess, CNN_MODEL_DIR)
                 print('Saved snapshot at epoch: %d' % i)
             elif count == count_max:
-                print("Cannot improve the model. Finish training at epoch %d..." % i)
+                print("Cannot improve the model. \
+                    Finish training at epoch %d..." % i)
                 return
 
         # save model
@@ -219,7 +221,7 @@ def evaluate():
         saver = tf.train.Saver()
         saver.restore(sess, CNN_MODEL_DIR)
         images, labels = load_data(TEST_DATA_DIR)
-        print('test accuracy %g' % accuracy.eval(feed_dict={
+        print('Test accuracy %g' % accuracy.eval(feed_dict={
             x: images, y_: labels, keep_prob: 1.0}))
 
 
@@ -237,10 +239,10 @@ def predict(img):
 
 if __name__ == '__main__':
     # Train
-    # tf.app.run(main=main, argv=[sys.argv[0]])      
+    tf.app.run(main=main, argv=[sys.argv[0]])
 
     # Evaluation
-    evaluate()
+    # evaluate()
 
     # Predict
     # img = cv2.imread('data/00011_00000.ppm')

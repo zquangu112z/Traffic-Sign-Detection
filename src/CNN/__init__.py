@@ -1,1 +1,1 @@
-from .CNN_3channels_3conv import deepnn
+from .CNN_3channels_2conv import deepnn
