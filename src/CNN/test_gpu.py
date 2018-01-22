@@ -12,7 +12,7 @@ import tensorflow as tf
 
 TRAIN_DATA_DIR = "data/raw/training/augmented/"
 TEST_DATA_DIR = "data/raw/testing"
-CNN_MODEL_DIR = "model/CNN/3cnn_2conv.ckpt"
+CNN_MODEL_DIR = "model/CNN/test_gpu.ckpt"
 PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
 PICKLE_LABELS_DIR = "data/pickle/test_labels.pkl"
 NUM_CLASSES = 9
@@ -151,7 +151,7 @@ def main(_):
     config = tf.ConfigProto()
     # config = tf.ConfigProto(intra_op_parallelism_threads=3,
     #                         inter_op_parallelism_threads=3)
-    # config.gpu_options.per_process_gpu_memory_fraction = 0.5
+    config.gpu_options.per_process_gpu_memory_fraction = 0.5
     # config.allow_soft_placement = True
     # config.log_device_placement = True
     config.gpu_options.allow_growth = True
@@ -165,37 +165,37 @@ def main(_):
                 start_idx = batch_idx * batch_size
                 end_idx = start_idx + batch_size
                 # batch = mnist.train.next_batch(50)
-                if batch_idx % 5 == 0:
-                    train_accuracy = accuracy.eval(feed_dict={
-                        x: images[start_idx:end_idx],
-                        y_: labels[start_idx:end_idx],
-                        keep_prob: 1.0})
-                    print('Epoch %d, batch_idx %d, training accuracy %g' %
-                          (i, batch_idx, train_accuracy))
+                # if batch_idx % 5 == 0:
+                #     train_accuracy = accuracy.eval(feed_dict={
+                #         x: images[start_idx:end_idx],
+                #         y_: labels[start_idx:end_idx],
+                #         keep_prob: 1.0})
+                #     print('Epoch %d, batch_idx %d, training accuracy %g' %
+                #           (i, batch_idx, train_accuracy))
                 train_step.run(feed_dict={x: images[start_idx:end_idx],
                                           y_: labels[start_idx:end_idx],
                                           keep_prob: 0.7})
 
             # Evaluation
-            count = count + 1
-            accuracy_ = accuracy.eval(feed_dict={
-                x: images_eval,
-                y_: labels_eval,
-                keep_prob: 1.0})
-            if accuracy_ > last_accuracy:
-                # lan train cho ra ket qua tot hon lan truoc
-                count = 0
-                last_accuracy = accuracy_
-                # luu lai model tot nhat hien tai
-                saver.save(sess, CNN_MODEL_DIR)
-                print('Saved snapshot at epoch: %d' % i)
-            elif count == count_max:
-                print("Cannot improve the model. \
-                    Finish training at epoch %d..." % i)
-                return
+            # count = count + 1
+            # accuracy_ = accuracy.eval(feed_dict={
+            #     x: images_eval,
+            #     y_: labels_eval,
+            #     keep_prob: 1.0})
+            # if accuracy_ > last_accuracy:
+            #     # lan train cho ra ket qua tot hon lan truoc
+            #     count = 0
+            #     last_accuracy = accuracy_
+            #     # luu lai model tot nhat hien tai
+            #     saver.save(sess, CNN_MODEL_DIR)
+            #     print('Saved snapshot at epoch: %d' % i)
+            # elif count == count_max:
+            #     print("Cannot improve the model. \
+            #         Finish training at epoch %d..." % i)
+            #     return
 
         # save model
-        # saver.save(sess, CNN_MODEL_DIR)
+        saver.save(sess, CNN_MODEL_DIR)
 
 
 def evaluate():

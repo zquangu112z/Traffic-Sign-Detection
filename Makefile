@@ -4,6 +4,9 @@ cnn:
 2conv:
 	PYTHONPATH=./ python src/CNN/CNN_3channels_2conv.py
 
+test_gpu:
+	PYTHONPATH=./ python src/CNN/test_gpu.py
+
 4conv:
 	PYTHONPATH=./ python src/CNN/CNN_3channels_4conv.py
 
@@ -14,6 +17,10 @@ train:
 	make 2conv
 	make 3conv
 	make 4conv
+
+gen_sample:
+	PYTHONPATH=./ python src/utils/gen_sample.py
+
 	
 
 sliding:

@@ -1,6 +1,6 @@
 import cv2
 import tensorflow as tf
-from src.CNN import deepnn
+from src.CNN.CNN_3channels_2conv import deepnn
 import logging
 
 CNN_MODEL_DIR = "model/CNN/3cnn_2conv.ckpt"
