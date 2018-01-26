@@ -6,14 +6,11 @@ import logging
 import numpy as np
 
 
-CNN_MODEL_DIR = "model/CNN/1cnn_2conv_10epoch_s28.ckpt"  # best
-# CNN_MODEL_DIR = "model/CNN/1cnn_2conv_7epoch_s28.ckpt"
-# CNN_MODEL_DIR = "model/CNN/1cnn_2conv_20epoch_s28.ckpt"
-# CNN_MODEL_DIR = "model/CNN/1cnn_2conv_15epoch_s28.ckpt"  # 0.995088
-
-
-# CNN_MODEL_DIR = "model/CNN/1cnn_3conv_10epoch_s28.ckpt"  # very good 0.995088
-# CNN_MODEL_DIR = "model/CNN/1cnn_3conv_20epoch_s28.ckpt"  # not good 0.993124
+# nham lan bien gioi han toc do
+CNN_MODEL_DIR = "model/CNN/1cnn_2conv_10epoch_s28.ckpt" # best
+# CNN_MODEL_DIR = "model/CNN/1cnn_2conv_15epoch_s28.ckpt"  # better than 10 epoch
+# CNN_MODEL_DIR = "model/CNN/1cnn_2conv_15epoch_s28_newdata.ckpt"  # van con nham lan
+# CNN_MODEL_DIR = "model/CNN/1cnn_2conv_20epoch_s28_newdata.ckpt" 
 
 
 IMG_SIZE = 28
@@ -70,8 +67,8 @@ def detect(path):
 
             # Erode to reduce noise and dilate to focus
             # mask = cv2.erode(mask, None, iterations=1)
-            mask = cv2.dilate(mask, None, iterations=4)
-            mask = cv2.erode(mask, None, iterations=1)
+            mask = cv2.dilate(mask, None, iterations=3)
+            # mask = cv2.erode(mask, None, iterations=1)
 
             # Find contours in the mask
             # cnts = cv2.findContours(image = mask.copy(),
@@ -160,4 +157,4 @@ VIDEO = [
 ]
 
 if __name__ == "__main__":
-    detect(VIDEO[4])
+    detect(VIDEO[3])

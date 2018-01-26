@@ -23,9 +23,9 @@ PICKLE_LABELS_DIR = "data/pickle/test_labels.pkl"
 NUM_CLASSES = 8
 IMG_SIZE = 28
 BATCH_SIZE = 90
-NUM_EPOCHS = 15
+NUM_EPOCHS = 20
 CNN_MODEL_DIR = "model/CNN/1cnn_2conv_" + \
-    str(NUM_EPOCHS) + "epoch_s" + str(IMG_SIZE) + ".ckpt"
+    str(NUM_EPOCHS) + "epoch_s" + str(IMG_SIZE) + "_newdata.ckpt"
 
 
 def deepnn(x):
@@ -250,10 +250,10 @@ def predict(img):
 
 if __name__ == '__main__':
     # Train
-    tf.app.run(main=main, argv=[sys.argv[0]])
+    # tf.app.run(main=main, argv=[sys.argv[0]])
 
     # Evaluation
-    # evaluate()
+    evaluate()
 
     # Predict
     # img = np.reshape(cv2.resize(cv2.imread(
