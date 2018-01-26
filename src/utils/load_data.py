@@ -34,16 +34,17 @@ def to_one_hot(d):
     # return ret
 
     map = {
-        0: 0,
         14: 1,
-        17: 2,
-        32: 3,
-        33: 4,
-        34: 5,
-        51: 6,
-        52: 7,
-        99: 8
-    }
+        34: 2,
+        53: 2,
+        33: 3,
+        54: 3,
+        51: 4,
+        52: 5,
+        17: 6,
+        0: 7,
+        99: 8,
+        32: 8}
 
     ret = np.zeros(len(map))
     ret[map[d]] = 1
@@ -54,7 +55,7 @@ def to_one_hot(d):
 # print(to_one_hot(0))
 
 
-IMG_SIZE = 56
+IMG_SIZE = 28
 
 
 def load_data(data_dir):

@@ -5,3 +5,5 @@ __pycache__
 data
 model/CNN
 clear
+result.txt
+.DS_Store

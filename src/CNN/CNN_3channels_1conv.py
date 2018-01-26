@@ -4,17 +4,22 @@ from __future__ import print_function
 
 import sys
 import tempfile
+import pickle
 from sklearn.utils import shuffle
 from src.utils import load_data
 import tensorflow as tf
 import logging as logger
+import cv2
 import time
 
-
-TRAIN_DATA_DIR = "data/raw/testing"
-CNN_MODEL_DIR = "model/CNN/test_gpu.ckpt"
+TRAIN_DATA_DIR = "data/raw/training/augmented"
+# TRAIN_DATA_DIR = "data/raw/testing"
+TEST_DATA_DIR = "data/raw/testing"
+CNN_MODEL_DIR = "model/CNN/3cnn_1conv_10epoch_s28.ckpt"
+PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
+PICKLE_LABELS_DIR = "data/pickle/test_labels.pkl"
 NUM_CLASSES = 9
-IMG_SIZE = 56
+IMG_SIZE = 28
 
 
 def deepnn(x):
@@ -32,24 +37,14 @@ def deepnn(x):
     with tf.name_scope('pool1'):
         h_pool1 = max_pool_2x2(h_conv1)
 
-    # Second convolutional layer -- maps 32 feature maps to 64.
-    with tf.name_scope('conv2'):
-        W_conv2 = weight_variable([5, 5, 32, 64])
-        b_conv2 = bias_variable([64])
-        h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-
-    # Second pooling layer.
-    with tf.name_scope('pool2'):
-        h_pool2 = max_pool_2x2(h_conv2)
-
-    # Fully connected layer 1 -- after 2 round of downsampling, our 56x56 image
-    # is down to 14x14x64 feature maps -- maps this to 1024 features.
     with tf.name_scope('fc1'):
-        W_fc1 = weight_variable([14 * 14 * 64, 1024])
+        W_fc1 = weight_variable(
+            [int(IMG_SIZE / 2) * int(IMG_SIZE / 2) * 32, 1024])
         b_fc1 = bias_variable([1024])
 
-        h_pool2_flat = tf.reshape(h_pool2, [-1, 14 * 14 * 64])
-        h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+        h_pool1_flat = tf.reshape(
+            h_pool1, [-1, int(IMG_SIZE / 2) * int(IMG_SIZE / 2) * 32])
+        h_fc1 = tf.nn.relu(tf.matmul(h_pool1_flat, W_fc1) + b_fc1)
 
     # Dropout - controls the complexity of the model, prevents co-adaptation of
     # features.
@@ -93,15 +88,15 @@ def main(_):
     start = time.time()
     images, labels = load_data(TRAIN_DATA_DIR)
 
-    # Evaluation set
-    num_validation = 100
+    # evaluation set
+    num_validation = 1000
     images, labels = shuffle(images, labels, random_state=0)
     images_eval, labels_eval = images[:num_validation], labels[:num_validation]
     images, labels = images[num_validation:], labels[num_validation:]
 
     num_datapoint = len(images)
     logger.warning('num_datapoint: %s' % num_datapoint)
-    batch_size = 100
+    batch_size = 50
     num_epochs = 10
 
     # Create the model
@@ -137,57 +132,109 @@ def main(_):
     last_accuracy = 0
 
     config = tf.ConfigProto()
+    # Prevent Tensorflow exploits all the power of CPU
+    # config = tf.ConfigProto(intra_op_parallelism_threads=3,
+    #                         inter_op_parallelism_threads=3)
+    # Replace by allow_growth in order to automatically choose fraction value
+    config.gpu_options.per_process_gpu_memory_fraction = 0.4
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
         logger.warning(">>>----------Init sess-------->>>")
         sess.run(tf.global_variables_initializer())
         # epoch
         for i in range(num_epochs):
+            logger.warning(i)
             images, labels = shuffle(images, labels, random_state=0)
 
-            for batch_idx in range(int(num_datapoint / batch_size)):
-                logger.warning(batch_idx)
+            num_batch = int(num_datapoint / batch_size)
+            for batch_idx in range(num_batch):
+                logger.warning('Epoch %d, batch_idx %d/%d' %
+                               (i, batch_idx, num_batch))
                 start_idx = batch_idx * batch_size
                 end_idx = start_idx + batch_size
-                if batch_idx % 500 == 0:
-                    train_accuracy = sess.run(accuracy,
-                                              feed_dict={
-                                                  x: images_eval,
-                                                  y_: labels_eval,
-                                                  keep_prob: 1.0})
+                # if batch_idx % 1000 == 0:
+                #     train_accuracy = sess.run(accuracy,
+                #                               feed_dict={
+                #                                   x: images_eval,
+                #                                   y_: labels_eval,
+                #                                   keep_prob: 1.0})
 
-                    logger.warning('Epoch %d, batch_idx %d, \
-                        Evaluation accuracy %g' %
-                                   (i, batch_idx, train_accuracy))
+                #     logger.warning('>>>>>>>>>>>>>>>>>>>>>>>>>>> Epoch %d, batch_idx %d, \
+                #         Evaluation accuracy %g' %
+                #                    (i, batch_idx, train_accuracy))
                 train_step.run(feed_dict={x: images[start_idx:end_idx],
                                           y_: labels[start_idx:end_idx],
                                           keep_prob: 0.7})
 
             # Evaluation
-            count = count + 1
-            accuracy_ = sess.run(accuracy,
-                                 feed_dict={
-                                     x: images_eval,
-                                     y_: labels_eval,
-                                     keep_prob: 1.0})
-            logger.warning('Epoch %d, training accuracy %g' % (i, accuracy_))
-            if accuracy_ > last_accuracy:  # Better
-                count = 0
-                last_accuracy = accuracy_
-                # Save the current model
-                saver.save(sess, CNN_MODEL_DIR)
-                logger.warning('Saved snapshot at epoch: %d' % i)
-            elif count == count_max:
-                logger.warning("Cannot improve the model. \
-                    Finish training at epoch %d..." % i)
-                return
+            # # with tf.device('/cpu:0'):
+            # count = count + 1
+            # accuracy_ = sess.run(accuracy,
+            #                      feed_dict={
+            #                          x: images_eval,
+            #                          y_: labels_eval,
+            #                          keep_prob: 1.0})
+            # logger.warning(
+            #     '>>>>>>>>>>>>>>>>>>>>>>>>>>> Epoch %d, training accuracy %g' %
+            #     (i, accuracy_))
+            # if accuracy_ > last_accuracy:  # Better
+            #     count = 0
+            #     last_accuracy = accuracy_
+            #     # Save the current model
+            #     saver.save(sess, CNN_MODEL_DIR)
+            #     logger.warning('Saved snapshot at epoch: %d' % i)
+            # elif count == count_max:
+            #     logger.warning("Cannot improve the model. \
+            #         Finish training at epoch %d..." % i)
+            #     return
 
         # Save model
         saver.save(sess, CNN_MODEL_DIR)
     logger.warning(">>>>>>>Time: %f" % (time.time() - start))
 
 
+def evaluate():
+    x = tf.placeholder(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3])
+    y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
+    y_conv, keep_prob = deepnn(x)
+    with tf.name_scope('accuracy'):
+        correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
+        correct_prediction = tf.cast(correct_prediction, tf.float32)
+    accuracy = tf.reduce_mean(correct_prediction)
+
+    with tf.Session() as sess:
+        saver = tf.train.Saver()
+        saver.restore(sess, CNN_MODEL_DIR)
+        images, labels = load_data(TEST_DATA_DIR)
+        # Old code: it breaks when using tensorflow-GPU (not fixed yet)
+        # logger.warning('test accuracy %g' % accuracy.eval(feed_dict={
+        #     x: images, y_: labels, keep_prob: 1.0}))
+        logger.warning('test accuracy %g' % sess.run(accuracy,
+                                                     feed_dict={
+                                                         x: images,
+                                                         y_: labels,
+                                                         keep_prob: 1.0}))
+
+
+def predict(img):
+    x = tf.placeholder(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3])
+    y_conv, keep_prob = deepnn(x)
+    predict = tf.argmax(y_conv, 1)
+
+    with tf.Session() as sess:
+        saver = tf.train.Saver()
+        saver.restore(sess, CNN_MODEL_DIR)
+        logger.warning('Label %g' % sess.run(
+            predict, feed_dict={x: img, keep_prob: 1.0}))
+
+
 if __name__ == '__main__':
     # Train
-    # logger.warning(">>>>>>>Time: %f" % (time.time() - start))
-    tf.app.run(main=main, argv=[sys.argv[0]])
+    # tf.app.run(main=main, argv=[sys.argv[0]])
+
+    # Test
+    # evaluate()
+
+    img = cv2.imread('data/00011_00000.ppm')
+    img = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
+    predict([img])
