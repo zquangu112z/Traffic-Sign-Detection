@@ -1,20 +1,29 @@
 import cv2
-import numpy as np
 import tensorflow as tf
-from src.CNN import deepnn
+from src.CNN.CNN_3channels_2conv_s28 import deepnn
+import logging
 
+CNN_MODEL_DIR = "model/CNN/3cnn_2conv_10epoch_s28.ckpt"
+# CNN_MODEL_DIR = "model/CNN/3cnn_2conv.ckpt" # 1 epoch, work, very bad
+IMG_SIZE = 28
 
-CNN_MODEL_DIR = "model/CNN/3cnn_evaluation_30epoch.ckpt"
-# CNN_MODEL_DIR = "model/CNN/3cnn.ckpt"
-# CNN_MODEL_DIR = "model/CNN/3cnn_4conv_30ep_DEC14_2017.ckpt"
-IMG_SIZE = 56
+LABEL = {
+    0: 'Han che toc do',
+    1: 'Stop',
+    2: 'One-Way',
+    3: 'Diploma',
+    4: 'Turn Right',
+    5: 'Turn Left',
+    6: 'No Left',
+    7: 'No Right',
+    8: 'Others',
+}
 
 
 def detect(path):
     x_placeholder = tf.placeholder(tf.float32, [None, IMG_SIZE, IMG_SIZE, 3])
     y_conv, keep_prob = deepnn(x_placeholder)
     predict = tf.argmax(y_conv, 1)
-    y_sm = tf.nn.softmax(y_conv)
 
     with tf.Session() as sess:
         saver = tf.train.Saver()
@@ -29,7 +38,7 @@ def detect(path):
                 # and allow us to focus on the structural objects
                 # inside the frame
                 blurred = cv2.GaussianBlur(frame, (3, 3), 0)
-                # TODO: implement "Bilateral Filtering" and see if it's cost
+                # @TODO: implement "Bilateral Filtering" and see if it's cost
 
                 # Convert BGR to HSV
                 hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
@@ -70,49 +79,38 @@ def detect(path):
                 i = 0
                 for cnt in cnts:
                     x, y, w, h = cv2.boundingRect(cnt)
-                    if w > 20 and h > 20 and float(h)/w > 0.8 and float(h)/w < 1.5:
-                        # if True:
-                        # TODO: check if it is a sign
-                        isSign = False
-                        # window = cv2.resize(frame[x:x+w, y:y+h], (28,28))
-                        # TODO bug: imgwarp.cpp:3229: error:
-                        # (-215) ssize.area() > 0 in function resize
-
-                        # resize -> IMG_SIZE*IMG_SIZE
-                        x_center, y_center = x + int(w/2), y + int(h/2)
+                    if w > 20 and h > 20 and float(h) / w > 0.8 and \
+                            float(h) / w < 1.5:
                         try:
-                            _max = max(w, h)
-                            # window = frame[y_center-int(_max/2):y_center+int(_max/2), x_center-int(_max/2):x_center+int(_max/2)]
-                            window = frame[y:y+h, x:x+w]
+                            window = frame[y:y + h, x:x + w]
                             i += 1
-                            cv2.imshow("window %d" % i, window)
-
-                            # print(_max)
-                            # print(window.shape)
                             window = cv2.resize(window, (IMG_SIZE, IMG_SIZE))
-                        # except:
-                        # 	_min = min(w,h)
-                        # 	window = frame[x_center-int(_min/2):x_center+int(_min/2), y_center-int(_min/2):y_center+int(_min/2)]
-                        # 	print(_min)
-                        # 	print(window.shape)
-                        # 	window = cv2.resize(window, (IMG_SIZE,IMG_SIZE), interpolation = cv2.INTER_AREA)
+                            # cv2.imshow("window %d" % i, window)
 
-                            window = cv2.cvtColor(window, cv2.COLOR_HSV2RGB)  # hsv2rgb
-                            _y_conv, lable = sess.run([y_sm, predict], feed_dict={x_placeholder: [window], keep_prob: 1.0})
-                            if lable == 0:
-                                isSign = True
+                            # window = cv2.cvtColor(
+                            #     window, cv2.COLOR_HSV2RGB)  # hsv2rgb
+                            label = sess.run(predict,
+                                             feed_dict={
+                                                 x_placeholder: [window],
+                                                 keep_prob: 1.0})
 
-                            # if _y_conv[0][0] == 1:
-                            # 	isSign = True
-
-                            # if True:
-                            if isSign:
-                                cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, i*50), 1)
+                            if label[0] != 8:
+                                # logging.warning(label[0], str(_y_conv))
+                                cv2.rectangle(
+                                    frame,
+                                    (x, y),
+                                    (x + w, y + h),
+                                    (0, 255, 100), 1)
+                                cv2.putText(
+                                    frame, LABEL[label[0]],
+                                    (x, y),
+                                    cv2.FONT_HERSHEY_SIMPLEX,
+                                    0.3, (0, 255, 0), 1, cv2.LINE_AA)
                         except Exception as e:
                             print(e)
 
                         cv2.imshow("frame", frame)
-                    # cv2.imshow("mask", mask)
+                    # cv2.imshow("mask", mask) # debug purpose @TODO: remove
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
             else:
@@ -120,8 +118,6 @@ def detect(path):
         cap.release()
         cv2.destroyAllWindows()
 
+
 if __name__ == "__main__":
     detect("data/MVI_1049.avi")
-    # detect("data/MVI_1082.avi")
-    # detect("data/test_sign.avi")
-    # detect("data/test_sign2.avi")
