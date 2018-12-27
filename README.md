@@ -9,3 +9,9 @@ make cnn
 ```bash
 make generate_images
 ```
+
+## Run sign detection
+```
+make cnn
+make phan_doan_mau_grey
+```

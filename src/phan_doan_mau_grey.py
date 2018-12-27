@@ -1,13 +1,13 @@
 import cv2
 import tensorflow as tf
-from src.CNN.CNN_1channels_2conv_s28 import deepnn
+from src.CNN.CNN import deepnn
 # from src.CNN.CNN_1channels_3conv_s28 import deepnn
 import logging
 import numpy as np
 
 
 # nham lan bien gioi han toc do
-CNN_MODEL_DIR = "model/CNN/1cnn_2conv_10epoch_s28.ckpt" # best
+CNN_MODEL_DIR = "model/CNN/cnn.ckpt" # best
 # CNN_MODEL_DIR = "model/CNN/1cnn_2conv_15epoch_s28.ckpt"  # better than 10 epoch
 # CNN_MODEL_DIR = "model/CNN/1cnn_2conv_15epoch_s28_newdata.ckpt"  # van con nham lan
 # CNN_MODEL_DIR = "model/CNN/1cnn_2conv_20epoch_s28_newdata.ckpt" 
