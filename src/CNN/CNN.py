@@ -16,7 +16,7 @@ TEST_DATA_DIR = "data/raw/testing"
 CNN_MODEL_DIR = "model/CNN/cnn.ckpt"
 PICKLE_IMGS_DIR = "data/pickle/train_imgs.pkl"
 PICKLE_LABELS_DIR = "data/pickle/test_labels.pkl"
-NUM_CLASSES = 2
+NUM_CLASSES = 11
 
 
 def deepnn(x):
@@ -93,18 +93,22 @@ def bias_variable(shape):
 def main(_):
     # Import data
     # mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
+    print('load')
     try:
         with open(PICKLE_IMGS_DIR, 'rb') as f:
             images = pickle.load(f)
         with open(PICKLE_LABELS_DIR, 'rb') as f:
             labels = pickle.load(f)
-    except:
+    except Exception as e:
+        print('Warn!')
         images, labels = load_data(TRAIN_DATA_DIR)
         with open(PICKLE_IMGS_DIR, 'wb') as f:
             pickle.dump(images, f)
         with open(PICKLE_LABELS_DIR, 'wb') as f:
             pickle.dump(labels, f)
+        print(e)
 
+    print('load done')
     num_datapoint = len(images)
     batch_size = 50
     num_epochs = 10

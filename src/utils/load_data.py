@@ -80,7 +80,8 @@ def load_data(data_dir):
             # -1)) #TODO upgrade to use all 3 chanels
             try:
                 img = cv2.resize(cv2.imread(f), (IMG_SIZE, IMG_SIZE))
-                images.append(img)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                images.append(img.flatten())
                 labels.append(to_one_hot(int(d)))
             except Exception:
                 pass
